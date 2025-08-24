@@ -54,9 +54,9 @@ emergency_ranges = {
 
 # --- COLOR MAP ---
 color_map = {
-    "Systolic (mmHg)": "red",
-    "Diastolic (mmHg)": "blue",
-    "Pulse (bpm)": "green"
+    "Systolic (mmHg)": "#FF6B6B",
+    "Diastolic (mmHg)": "#4DB8FF",
+    "Pulse (bpm)": "#7CFC00"
 }
 
 # --- DEFAULT DATE RANGE ---
@@ -135,7 +135,11 @@ else:
         hovermode="closest",
         margin=dict(t=50, r=10, l=10, b=40),
         height=500,
+        plot_bgcolor="#1E1E1E",     # background of plot area
+        paper_bgcolor="#1E1E1E",    # whole figure background
+        font=dict(color="white")    # labels and titles in white
     )
+
 
     st.plotly_chart(fig, use_container_width=True)
 
@@ -149,7 +153,7 @@ def highlight_emergencies(row):
             low, high = emergency_ranges[col]
             value = row[col]
             if pd.notnull(value) and (value < low or value > high):
-                styles.append("background-color: #FFCCCC")
+                styles.append("background-color: #FF4C4C; color: white")
             else:
                 styles.append("")
         else:
