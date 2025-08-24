@@ -18,7 +18,13 @@ credentials = service_account.Credentials.from_service_account_info(
 
 client = gspread.authorize(credentials)
 sheet = client.open_by_key("1Fi-PN4lOhd10G7fbnhMZntog11PnXWx-LSWsDBK9UbU")
-worksheet = sheet.get_worksheet(1)  # gid = 491137158 (2nd sheet)
+# worksheet = sheet.get_worksheet(1)  # gid = 491137158 (2nd sheet)
+try:
+    worksheet = sheet.worksheet("Form Responses 1")
+except gspread.exceptions.WorksheetNotFound:
+    st.error("The worksheet 'Form Responses 1' was not found in the spreadsheet.")
+    st.stop()
+
 data = worksheet.get_all_records()
 
 # --- LOAD DATA ---
