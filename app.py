@@ -18,7 +18,7 @@ credentials = service_account.Credentials.from_service_account_info(
 
 client = gspread.authorize(credentials)
 sheet = client.open_by_key("1Fi-PN4lOhd10G7fbnhMZntog11PnXWx-LSWsDBK9UbU")
-# worksheet = sheet.get_worksheet(1)  # gid = 491137158 (2nd sheet)
+
 try:
     worksheet = sheet.worksheet("Form Responses 1")
 except gspread.exceptions.WorksheetNotFound:
@@ -77,9 +77,12 @@ with st.sidebar:
     )
 
 # --- FILTER DATA ---
-if isinstance(date_range, list) and len(date_range) == 2:
+if isinstance(date_range, (list, tuple)) and len(date_range) == 2:
     start_date, end_date = date_range
-    mask = (df['Date'] >= start_date) & (df['Date'] <= end_date)
+    start_datetime = pd.to_datetime(start_date)
+    # Include full day for end date
+    end_datetime = pd.to_datetime(end_date) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
+    mask = (df['Timestamp'] >= start_datetime) & (df['Timestamp'] <= end_datetime)
     filtered_df = df.loc[mask]
 else:
     filtered_df = df.copy()
@@ -130,10 +133,12 @@ else:
     st.plotly_chart(fig, use_container_width=True)
 
 # --- HIGHLIGHT EMERGENCIES IN RAW DATA ---
+cols_to_show = ["Timestamp"] + [m for m in selected_metrics if m in filtered_df.columns]
+
 def highlight_emergencies(row):
     styles = []
-    for col in selected_metrics:
-        if col in row:
+    for col in cols_to_show:
+        if col in emergency_ranges:
             low, high = emergency_ranges[col]
             value = row[col]
             if pd.notnull(value) and (value < low or value > high):
@@ -141,10 +146,9 @@ def highlight_emergencies(row):
             else:
                 styles.append("")
         else:
-            styles.append("")
+            styles.append("")  # No style for non-metric columns like Timestamp
     return styles
 
 with st.expander("📄 View Raw Data"):
-    cols_to_show = ["Timestamp"] + [m for m in selected_metrics if m in filtered_df.columns]
     styled_df = filtered_df[cols_to_show].style.apply(highlight_emergencies, axis=1)
     st.dataframe(styled_df, use_container_width=True)
