@@ -48,8 +48,15 @@ variables = list(column_rename_map.values())
 
 emergency_ranges = {
     "Systolic (mmHg)": (90, 129),
-    "Diastolic (mmHg)": (60, 79),
+    "Diastolic (mmHg)": (60, 80),
     "Pulse (bpm)": (60, 100),
+}
+
+# --- COLOR MAP ---
+color_map = {
+    "Systolic (mmHg)": "red",
+    "Diastolic (mmHg)": "blue",
+    "Pulse (bpm)": "green"
 }
 
 # --- DEFAULT DATE RANGE ---
@@ -80,7 +87,6 @@ with st.sidebar:
 if isinstance(date_range, (list, tuple)) and len(date_range) == 2:
     start_date, end_date = date_range
     start_datetime = pd.to_datetime(start_date)
-    # Include full day for end date
     end_datetime = pd.to_datetime(end_date) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
     mask = (df['Timestamp'] >= start_datetime) & (df['Timestamp'] <= end_datetime)
     filtered_df = df.loc[mask]
@@ -103,11 +109,12 @@ else:
             y=filtered_df[metric],
             mode='lines+markers',
             name=metric,
-            marker=dict(size=8),
+            marker=dict(size=8, color=color_map.get(metric, 'black')),
+            line=dict(color=color_map.get(metric, 'black')),
             hovertemplate=f'%{{x|%d %b, %I:%M %p}}<br>{metric}: %{{y}}<extra></extra>',
         ))
 
-        # Emergency points
+        # Emergency points in red stars
         low, high = emergency_ranges[metric]
         emergency_mask = (filtered_df[metric] < low) | (filtered_df[metric] > high)
         emergencies = filtered_df[emergency_mask]
